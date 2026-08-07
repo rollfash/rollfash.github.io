@@ -74,11 +74,18 @@ const PATTERNS = {
   ],
   /* בסגנון הדוגמה שנשלחה: פינות חסומות ומילים באורך 3–5 */
   'mini': [
-    '.#...',
+    '#....',
     '.....',
     '.....',
     '.....',
-    '...#.',
+    '....#',
+  ],
+  'mini-b': [
+    '..#..',
+    '.....',
+    '.....',
+    '.....',
+    '..#..',
   ],
 };
 
@@ -172,6 +179,23 @@ if (tooLong.length) {
 if (shortRuns.length) {
   console.error(`התבנית מייצרת רצפים של 2 תאים (${shortRuns.join(', ')}).`);
   console.error('רצף כזה נותן ערכים כמו "הל" או "ינ". הזיזו את התאים השחורים.');
+  process.exit(1);
+}
+
+/* כל תא לבן חייב להשתייך גם למילה מאוזנת וגם למאונכת. תא ששייך רק
+ * לאחת מהן משאיר אות שאין עליה שום רמז שני — הפותר יכול רק לנחש. */
+const unchecked = [];
+for (let r = 0; r < rows; r++) {
+  for (let c = 0; c < cols; c++) {
+    if (!open(r, c)) continue;
+    const inBoth = ['across', 'down'].every((dir) =>
+      slots.some((s) => s.dir === dir && s.cells.some(([sr, sc]) => sr === r && sc === c)));
+    if (!inBoth) unchecked.push(`${r},${c}`);
+  }
+}
+if (unchecked.length) {
+  console.error(`בתבנית יש תאים ששייכים למילה אחת בלבד: ${unchecked.join(' · ')}`);
+  console.error('לאות כזו אין רמז שני, ואפשר רק לנחש אותה. הזיזו את התאים השחורים.');
   process.exit(1);
 }
 

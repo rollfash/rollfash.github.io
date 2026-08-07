@@ -1,0 +1,344 @@
+/* ===== התשבץ. ערכת צבעים בהירה, כמו בדוגמה ===== */
+:root {
+  --bg: #ffffff;
+  --fg: #121213;
+  --muted: #6b7075;
+  --border: #d3d6da;
+  --line: #121213;
+  --active: #f5b93b;      /* המשבצת הפעילה */
+  --in-word: #fdf0cf;     /* שאר המילה הפעילה */
+  --revealed: #2f7d4f;
+  --key-bg: #ffffff;
+  --key-border: #d3d6da;
+  --accent: #121213;
+  --toast-bg: #121213;
+  --toast-fg: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Segoe UI", "Arial Hebrew", Arial, "Noto Sans Hebrew", system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  padding-bottom: 40px;
+}
+
+/* ===== כותרת ===== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 12px;
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 20;
+}
+.title { font-size: 1.3rem; font-weight: 700; margin: 0; flex: 1; text-align: center; }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+
+.timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--muted);
+  min-width: 44px;
+  text-align: center;
+}
+
+.icon-btn {
+  background: none;
+  border: 0;
+  color: var(--fg);
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+}
+.icon-btn:hover { background: rgba(0, 0, 0, .06); }
+.icon-btn svg { width: 24px; height: 24px; fill: currentColor; display: block; }
+
+/* ===== המשחק ===== */
+.game { width: min(520px, 100%); margin: 0 auto; padding: 0 12px; }
+
+/* ----- שורת ההגדרה הפעילה ----- */
+.clue-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #121213;
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 14px 0;
+  min-height: 62px;
+}
+.clue-num {
+  background: var(--active);
+  color: #121213;
+  font-weight: 700;
+  border-radius: 8px;
+  min-width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  font-size: 1.05rem;
+}
+.clue-text { flex: 1; }
+.clue-dir { font-size: .72rem; opacity: .65; }
+.clue-body { font-size: 1rem; line-height: 1.4; }
+
+/* ----- הרשת ----- */
+.board-wrap { display: grid; place-items: center; }
+/* הרשת מוצגת LTR בכוונה, למרות שהעמוד RTL.
+ * בנתונים העמודה האחרונה היא התא הימני ביותר — שם מתחילה מילה
+ * מאוזנת. גריד RTL היה שם את עמודה 0 מימין ומשקף את כל הלוח,
+ * כך ש"1 מאוזן" היה נוחת בקצה השמאלי במקום בימני. */
+.board {
+  display: grid;
+  direction: ltr;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  width: min(340px, 88vw);
+  border: 2px solid var(--line);
+  background: var(--line);
+  gap: 1px;
+}
+.cell {
+  position: relative;
+  aspect-ratio: 1;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.cell.block { background: var(--line); cursor: default; }
+.cell.in-word { background: var(--in-word); }
+.cell.active { background: var(--active); }
+
+.num {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  font-size: .55rem;
+  color: var(--muted);
+  line-height: 1;
+  pointer-events: none;
+}
+.letter { font-size: 1.4rem; font-weight: 700; line-height: 1; }
+.cell.revealed .letter { color: var(--revealed); }
+
+/* ----- רמזים ----- */
+.tools {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 14px 0 10px;
+  flex-wrap: wrap;
+}
+.tool-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: .88rem;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.tool-btn:hover:not(:disabled) { border-color: var(--fg); }
+.tool-btn:disabled { opacity: .4; cursor: default; }
+.tool-note { font-size: .78rem; color: var(--muted); }
+
+/* ----- מקלדת ----- */
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px auto 18px;
+  max-width: 500px;
+
+  /* השורות הארוכות הן 2 ו-3: שמונה מקשים ושבעה מרווחים */
+  --key-w: calc((100% - 35px) / 8);
+}
+.kb-row {
+  display: flex;
+  direction: ltr;     /* סדר מקלדת עברית פיזית: ק בשמאל, פ בימין */
+  gap: 5px;
+  justify-content: center;
+}
+.key {
+  flex: 0 0 var(--key-w);
+  height: 48px;
+  border: 1px solid var(--key-border);
+  border-radius: 8px;
+  background: var(--key-bg);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .08);
+}
+.key:active { background: #eee; }
+.key.action { background: #121213; color: #fff; border-color: #121213; }
+.key svg { width: 20px; height: 20px; fill: currentColor; }
+
+/* ----- רשימת ההגדרות ----- */
+.clue-lists { margin-top: 24px; }
+.clue-lists h2 {
+  font-size: .8rem;
+  color: var(--muted);
+  font-weight: 700;
+  margin: 18px 0 8px;
+}
+.clue-list { display: flex; flex-direction: column; gap: 6px; }
+.clue-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  text-align: right;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: .95rem;
+  color: var(--fg);
+  cursor: pointer;
+}
+.clue-item:hover { border-color: var(--muted); }
+.clue-item.active {
+  background: var(--in-word);
+  border-color: var(--active);
+  border-right-width: 4px;
+}
+.ci-num { font-weight: 700; min-width: 16px; }
+.ci-text { flex: 1; line-height: 1.4; }
+
+/* ===== הודעות ===== */
+.toast-area {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 60;
+}
+.toast {
+  background: var(--toast-bg);
+  color: var(--toast-fg);
+  padding: 11px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: .92rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .25);
+}
+.toast.out { animation: fade-out .3s ease forwards; }
+@keyframes fade-out { to { opacity: 0; } }
+
+/* ===== חלונות ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, .9);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  padding: 16px;
+  overflow-y: auto;
+}
+.modal-backdrop[hidden] { display: none; }
+
+.modal {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px 22px 18px;
+  width: min(440px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, .18);
+  user-select: text;
+}
+.modal[hidden] { display: none; }
+.modal h2 { margin: 0 0 12px; font-size: 1.35rem; text-align: center; }
+.modal h3 { margin: 20px 0 6px; font-size: .95rem; }
+.modal p { margin: 8px 0; line-height: 1.6; font-size: .93rem; }
+
+.close-btn {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  background: none;
+  border: 0;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--fg);
+  padding: 2px 8px;
+}
+.footnote { color: var(--muted); font-size: .8rem; margin-top: 14px; }
+
+.result-stats { display: flex; justify-content: center; gap: 40px; margin: 18px 0 22px; }
+.rstat { text-align: center; }
+.rnum { font-size: 2.1rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.rlabel { font-size: .75rem; color: var(--muted); }
+
+.stats-grid { display: flex; justify-content: center; gap: 4px; }
+.stat { flex: 1; text-align: center; }
+.stat-num { font-size: 1.4rem; font-weight: 400; font-variant-numeric: tabular-nums; }
+.stat-label { font-size: .68rem; color: var(--muted); line-height: 1.2; }
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+  padding-top: 16px;
+}
+.countdown-box { flex: 1; text-align: center; }
+.countdown-label { font-size: .75rem; color: var(--muted); }
+.countdown { font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.share-btn {
+  flex: 1;
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 13px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.share-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+@media (max-width: 380px) {
+  .key { height: 44px; font-size: 1.05rem; }
+  .letter { font-size: 1.2rem; }
+}

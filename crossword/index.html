@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>תשבץ יומי בעברית</title>
+<meta name="description" content="תשבץ קטן יומי בעברית. הגדרות היגיון, לא טריוויה. חדש בכל יום.">
+<meta name="theme-color" content="#ffffff">
+<link rel="canonical" href="https://rollfash.github.io/crossword/">
+
+<meta property="og:site_name" content="משחקי מילים בעברית">
+<meta property="og:title" content="תשבץ יומי בעברית">
+<meta property="og:description" content="תשבץ קטן, הגדרות היגיון, חדש בכל יום.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="he_IL">
+<meta property="og:url" content="https://rollfash.github.io/crossword/">
+
+<link rel="icon" type="image/png" href="../favicon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="header">
+  <a class="icon-btn" href="../" aria-label="לדף הבית" title="לדף הבית">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 8h-3v9h-5v-6H11v6H6v-9H3z"/></svg>
+  </a>
+
+  <h1 class="title">תשבץ</h1>
+
+  <div class="header-actions">
+    <span class="timer" id="timer" aria-label="זמן">0:00</span>
+    <button class="icon-btn" id="btn-help" aria-label="איך משחקים" title="איך משחקים">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 16.2a1.2 1.2 0 110-2.4 1.2 1.2 0 010 2.4zm1.6-5.4c-.7.5-.9.8-.9 1.3v.4h-1.5v-.6c0-1.1.5-1.8 1.4-2.4.8-.6 1.1-.9 1.1-1.6 0-.8-.6-1.3-1.5-1.3-.9 0-1.6.5-1.8 1.5l-1.5-.4c.3-1.6 1.6-2.5 3.3-2.5 1.9 0 3.1 1 3.1 2.6 0 1.2-.6 1.9-1.7 2.6z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main class="game">
+  <!-- שורת ההגדרה הפעילה, מעל הרשת -->
+  <div class="clue-bar" id="clue-bar">
+    <span class="clue-num" id="clue-num">1</span>
+    <div class="clue-text">
+      <div class="clue-dir" id="clue-dir">מאוזן</div>
+      <div class="clue-body" id="clue-body">…</div>
+    </div>
+  </div>
+
+  <div class="board-wrap">
+    <div class="board" id="board" role="grid" aria-label="לוח התשבץ"></div>
+  </div>
+
+  <div class="tools">
+    <button class="tool-btn" id="btn-reveal">
+      <span aria-hidden="true">💡</span> גלו אות
+    </button>
+    <span class="tool-note" id="reveal-note"></span>
+  </div>
+
+  <div class="keyboard" id="keyboard" role="group" aria-label="מקלדת"></div>
+
+  <!-- רשימת ההגדרות המלאה -->
+  <section class="clue-lists">
+    <h2>מאוזן</h2>
+    <div class="clue-list" id="list-across"></div>
+    <h2>מאונך</h2>
+    <div class="clue-list" id="list-down"></div>
+  </section>
+</main>
+
+<div class="toast-area" id="toast-area" role="status" aria-live="polite"></div>
+
+<div class="modal-backdrop" id="modal-backdrop" hidden>
+
+  <section class="modal" id="modal-help" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <button class="close-btn" data-close aria-label="סגירה">&times;</button>
+    <h2 id="help-title">איך משחקים</h2>
+    <p>מלאו את הרשת. הקישו על משבצת כדי לבחור אותה, והקישו עליה שוב
+       כדי להתחלף בין <strong>מאוזן</strong> ל<strong>מאונך</strong>.</p>
+    <p>ההגדרה של המילה הפעילה מופיעה מעל הרשת. אפשר גם להקיש על כל
+       הגדרה ברשימה שלמטה כדי לקפוץ אליה.</p>
+
+    <h3>אותיות סופיות</h3>
+    <p>הרשת כתובה באותיות רגילות בלבד. אות סופית בסוף מילה מאוזנת
+       מתנגשת עם המילה המאונכת שעוברת דרכה — לכן <em>שולחן</em>
+       נכתב ברשת ש־ו־ל־ח־נ.</p>
+
+    <h3>רמזים</h3>
+    <p>אפשר לגלות אות במשבצת הפעילה, עד <strong>שתי אותיות בכל מילה</strong>.
+       הרמזים נספרים ומופיעים בסיכום.</p>
+
+    <p class="footnote">תשבץ חדש בכל יום בחצות. לכל השחקנים אותו תשבץ.</p>
+  </section>
+
+  <section class="modal" id="modal-done" hidden role="dialog" aria-modal="true" aria-labelledby="done-title">
+    <button class="close-btn" data-close aria-label="סגירה">&times;</button>
+    <h2 id="done-title">פתרת!</h2>
+    <div class="result-stats">
+      <div class="rstat"><div class="rnum" id="r-time">0:00</div><div class="rlabel">זמן</div></div>
+      <div class="rstat"><div class="rnum" id="r-hints">0</div><div class="rlabel">רמזים</div></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-num" id="st-played">0</div><div class="stat-label">תשבצים</div></div>
+      <div class="stat"><div class="stat-num" id="st-clean">0</div><div class="stat-label">ללא רמזים</div></div>
+      <div class="stat"><div class="stat-num" id="st-best">—</div><div class="stat-label">הזמן הטוב</div></div>
+      <div class="stat"><div class="stat-num" id="st-streak">0</div><div class="stat-label">רצף</div></div>
+    </div>
+    <div class="modal-footer">
+      <div class="countdown-box">
+        <div class="countdown-label">התשבץ הבא בעוד</div>
+        <div class="countdown" id="countdown">--:--:--</div>
+      </div>
+      <button class="share-btn" id="btn-share">
+        שיתוף
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.1c-.8 0-1.5.3-2 .8l-7.1-4.2c.1-.2.1-.5.1-.7s0-.5-.1-.7L16 7.1c.5.5 1.2.8 2 .8 1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3c0 .2 0 .5.1.7L8 9.9c-.5-.5-1.2-.8-2-.8-1.7 0-3 1.3-3 3s1.3 3 3 3c.8 0 1.5-.3 2-.8l7.1 4.2c0 .2-.1.4-.1.6 0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9-1.2-3-2.8-3z"/></svg>
+      </button>
+    </div>
+  </section>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/puzzles.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
