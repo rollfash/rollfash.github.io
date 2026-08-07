@@ -218,7 +218,11 @@ body {
   transition: background-color .15s ease, color .15s ease;
 }
 .key:active { opacity: .75; }
-.key.wide { flex: 1.6; font-size: .95rem; gap: 4px; }
+.key.wide { flex: 1.5; font-size: .82rem; gap: 4px; }
+
+/* ריווח בשורה העליונה, במקום שבו יושבות במקלדת אמיתית האותיות
+   הסופיות ן ו-ם. שומר על רוחב אחיד לכל המקשים בכל השורות. */
+.kb-spacer { min-width: 0; }
 .key svg { width: 22px; height: 22px; fill: currentColor; }
 
 .key.correct { background: var(--correct); color: #fff; }

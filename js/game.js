@@ -107,21 +107,39 @@
   }
 
   /* סדר האותיות זהה למקלדת עברית פיזית, משמאל לימין.
-   * ה-CSS נותן לשורות כיוון LTR, כך שהן מופיעות בדיוק בסדר הזה. */
+   * ה-CSS נותן לשורות כיוון LTR, כך שהן מופיעות בדיוק בסדר הזה.
+   *
+   * במקלדת אמיתית מופיעות במקומות I ו-O האותיות הסופיות ן ו-ם, ואילו נ ו-מ
+   * הרגילות יושבות בשורה התחתונה (B ו-N). המשחק מנרמל אותיות סופיות, ולכן
+   * נ ו-מ מופיעות רק במקומן הרגיל למטה, ובשורה העליונה נשאר רווח.
+   *
+   * מספר = רווח בעל רוחב יחסי, כדי שכל השורות יֵצאו באותו רוחב כולל
+   * ולכל המקשים יהיה בערך אותו גודל. */
   const KB_ROWS = [
-    ['ק', 'ר', 'א', 'ט', 'ו', 'נ', 'מ', 'פ'],
-    ['ש', 'ד', 'ג', 'כ', 'ע', 'י', 'ח', 'ל'],
-    ['ENTER', 'ז', 'ס', 'ב', 'ה', 'צ', 'ת', 'BACK'],
+    //  Q ' W          E    R    T    Y    U   I ן  O ם   P
+    [2, 'ק', 'ר', 'א', 'ט', 'ו', 2, 'פ'],
+    //  A    S    D    F    G    H    J    K   L ך  ; ף
+    ['ש', 'ד', 'ג', 'כ', 'ע', 'י', 'ח', 'ל', 2],
+    //       Z    X    C    V    B    N    M    < ת   > ץ
+    ['ENTER', 'ז', 'ס', 'ב', 'ה', 'נ', 'מ', 'צ', 'ת', 'BACK'],
   ];
 
   const BACK_ICON =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3H7c-.7 0-1.2.4-1.6.9L0 12l5.4 8.1c.4.5.9.9 1.6.9h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.6L17.6 17 14 13.4 10.4 17 9 15.6l3.6-3.6L9 8.4 10.4 7 14 10.6 17.6 7 19 8.4 15.4 12l3.6 3.6z"/></svg>';
 
   const keyEls = new Map();
-  KB_ROWS.forEach((letters) => {
+  KB_ROWS.forEach((keys) => {
     const row = document.createElement('div');
     row.className = 'kb-row';
-    letters.forEach((k) => {
+    keys.forEach((k) => {
+      if (typeof k === 'number') {
+        const gap = document.createElement('div');
+        gap.className = 'kb-spacer';
+        gap.style.flex = k;
+        row.appendChild(gap);
+        return;
+      }
+
       const btn = document.createElement('button');
       btn.className = 'key' + (k.length > 1 ? ' wide' : '');
       btn.type = 'button';
