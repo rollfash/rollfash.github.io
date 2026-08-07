@@ -23,3 +23,4 @@ review.html
 # רשימות המילים הגולמיות — גדולות, ומורידים אותן לפי הצורך
 data/src-*.txt
 data/src-*.csv
+data/crosswords-staging.json
