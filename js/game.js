@@ -543,7 +543,7 @@
   /* ===================== אתחול ===================== */
 
   // שם המשחק מוגדר במקום אחד (config.js) ומוחל על כל מקום שבו הוא מופיע
-  document.title = `${APP_NAME} — ${CONFIG.TAGLINE}`;
+  document.title = CONFIG.PAGE_TITLE;
   document.querySelector('.title').textContent = APP_NAME;
   document.getElementById('help-tagline').textContent = CONFIG.TAGLINE;
 
