@@ -12,58 +12,37 @@
   const ROWS = 6;
   const COLS = 5;
 
+  const CONFIG = window.GAME_CONFIG;
+  const APP_NAME = CONFIG.APP_NAME;
+
   /* ----- יום ראשון של המשחק. שינוי הערך מזיז את כל לוח הזמנים ----- */
-  const EPOCH = new Date(2026, 0, 1);
+  const EPOCH = new Date(...CONFIG.EPOCH);
 
   /* ----- אותיות סופיות ----- */
   const TO_REGULAR = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
   const TO_FINAL = { 'כ': 'ך', 'מ': 'ם', 'נ': 'ן', 'פ': 'ף', 'צ': 'ץ' };
 
-  const norm = (w) => [...w].map((c) => TO_REGULAR[c] || c).join('');
+  const { norm, toDisplay, dayNumber } = window.DailyWord;
 
   /** האות כפי שהיא מוצגת: במשבצת האחרונה מוצגת הצורה הסופית. */
   const glyph = (letter, col) =>
     (col === COLS - 1 && TO_FINAL[letter]) ? TO_FINAL[letter] : letter;
 
-  /** מילה שלמה לתצוגה, עם אות סופית בסוף. */
-  const toDisplay = (word) =>
-    [...word].map((c, i) => glyph(c, i)).join('');
-
-  /* ----- מילון ----- */
+  /* ----- מילון -----
+   * רשימת הניחושים ארוזה כמחרוזת רציפה של חמישיות אותיות, בלי מפרידים. */
   const ANSWERS = WORD_DATA.ANSWERS.map(norm);
-  const DICTIONARY = new Set([...WORD_DATA.ANSWERS, ...WORD_DATA.EXTRA].map(norm));
-
-  /* ----- בחירת מילת היום -----
-   * ערבוב דטרמיניסטי עם זרע קבוע, כדי שסדר המילים לא יהיה סדר הרשימה
-   * אך יהיה זהה אצל כל השחקנים. */
-  function mulberry32(seed) {
-    return function () {
-      seed = (seed + 0x6D2B79F5) | 0;
-      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-
-  const SHUFFLED = (() => {
-    const list = ANSWERS.slice();
-    const rand = mulberry32(20260101);
-    for (let i = list.length - 1; i > 0; i--) {
-      const j = Math.floor(rand() * (i + 1));
-      [list[i], list[j]] = [list[j], list[i]];
+  const DICTIONARY = new Set(ANSWERS);
+  {
+    const packed = WORD_DATA.ALLOWED_PACKED;
+    for (let i = 0; i < packed.length; i += COLS) {
+      DICTIONARY.add(norm(packed.slice(i, i + COLS)));
     }
-    return list;
-  })();
-
-  /** מספר הימים שחלפו מאז יום המשחק הראשון (לפי השעון המקומי). */
-  function dayNumber(date = new Date()) {
-    const today = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    return Math.round((today - EPOCH) / 86400000);
   }
 
+  /* ----- מילת היום (הלוגיקה עצמה ב-daily.js, משותפת עם ממשק הניהול) ----- */
   const DAY = dayNumber();
   const PUZZLE_NO = DAY + 1;
-  const SOLUTION = SHUFFLED[((DAY % SHUFFLED.length) + SHUFFLED.length) % SHUFFLED.length];
+  const TODAYS_WORD = window.DailyWord.forDate().word;
 
   /* ----- אחסון מקומי ----- */
   const KEY_STATE = 'he-wordle:daily';
@@ -88,8 +67,14 @@
 
   let state = load(KEY_STATE, null);
   if (!state || state.day !== DAY) {
-    state = { day: DAY, guesses: [], status: 'playing' };
+    state = { day: DAY, guesses: [], status: 'playing', solution: TODAYS_WORD };
+    save(KEY_STATE, state);
   }
+
+  /* משחק שכבר התחיל ממשיך עם המילה שאיתה התחיל, גם אם המילון השתנה
+   * מאז (הוספת מילים מזיזה את הערבוב). אחרת הצבעים שכבר נחשפו היו
+   * הופכים לשקריים באמצע המשחק. משחק חדש מקבל תמיד את המילה המעודכנת. */
+  const SOLUTION = state.solution || TODAYS_WORD;
 
   let current = '';          // הניחוש שמוקלד כרגע
   let busy = false;          // נעול בזמן אנימציית חשיפה
@@ -121,6 +106,8 @@
     rows.push({ el: row, tiles });
   }
 
+  /* סדר האותיות זהה למקלדת עברית פיזית, משמאל לימין.
+   * ה-CSS נותן לשורות כיוון LTR, כך שהן מופיעות בדיוק בסדר הזה. */
   const KB_ROWS = [
     ['ק', 'ר', 'א', 'ט', 'ו', 'נ', 'מ', 'פ'],
     ['ש', 'ד', 'ג', 'כ', 'ע', 'י', 'ח', 'ל'],
@@ -461,7 +448,7 @@
         .join(''))
       .join('\n');
 
-    return `${RLM}וורדל בעברית #${PUZZLE_NO} — ${tries}/${ROWS}\n\n${grid}\n\n${location.href}`;
+    return `${RLM}${APP_NAME} #${PUZZLE_NO} — ${tries}/${ROWS}\n\n${grid}\n\n${location.href}`;
   }
 
   document.getElementById('btn-share').addEventListener('click', async () => {
@@ -541,9 +528,14 @@
 
   /* ידית לבדיקות ולניפוי שגיאות. אינה מסגירה דבר — המילון ואופן הבחירה
    * ממילא נמצאים בקוד הצד־לקוח, בדיוק כמו במשחק המקורי. */
-  window.__wordle = { score, norm, toDisplay, dayNumber, SHUFFLED, SOLUTION, PUZZLE_NO, shareText };
+  window.__wordle = { score, norm, toDisplay, dayNumber, SOLUTION, PUZZLE_NO, shareText, DICTIONARY };
 
   /* ===================== אתחול ===================== */
+
+  // שם המשחק מוגדר במקום אחד (config.js) ומוחל על כל מקום שבו הוא מופיע
+  document.title = `${APP_NAME} — ${CONFIG.TAGLINE}`;
+  document.querySelector('.title').textContent = APP_NAME;
+  document.getElementById('help-tagline').textContent = CONFIG.TAGLINE;
 
   fitBoard();
 

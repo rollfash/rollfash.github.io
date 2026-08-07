@@ -191,8 +191,11 @@ body {
   margin: 0 auto;
 }
 
+/* המקלדת מסודרת כמו מקלדת עברית פיזית: ק בצד שמאל, פ בצד ימין.
+ * לכן השורות זורמות משמאל לימין, בניגוד לשאר העמוד שהוא RTL. */
 .kb-row {
   display: flex;
+  direction: ltr;
   gap: 5px;
   justify-content: center;
   touch-action: manipulation;
@@ -343,6 +346,7 @@ html[data-theme="dark"] .key.absent { color: #d0d0d0; }
 .switch:checked::after { transform: translateX(-20px); }
 
 .footnote { color: var(--muted); font-size: .82rem; margin-top: 14px; }
+.tagline { color: var(--muted); margin-top: -6px !important; font-size: .9rem !important; }
 
 /* סטטיסטיקות */
 #result-banner { text-align: center; margin-bottom: 18px; }
