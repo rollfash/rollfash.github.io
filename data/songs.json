@@ -1,0 +1,33 @@
+{
+  "_comment": [
+    "מקור האמת למשחק 'השיר היומי'.",
+    "כל רשומה: title = התשובה שהשחקן מרכיב, prompt = תיאור התמונה באנגלית.",
+    "אחרי עריכה הריצו:  node tools/make-song-images.js",
+    "הסקריפט מייצר את התמונות החסרות ובונה מחדש את song/js/songs.js.",
+    "הפרומפט באנגלית כי המודל מבין אותה הרבה יותר טוב מעברית.",
+    "אין לכתוב בפרומפט את שם השיר או טקסט כלשהו — זה יסגיר את התשובה."
+  ],
+
+  "songs": [
+    { "id": "001", "title": "סוס עץ",          "prompt": "a horse carved from smooth pale wood, visible wood grain and joints" },
+    { "id": "002", "title": "כלניות",           "prompt": "a field of bright red anemone flowers in bloom" },
+    { "id": "003", "title": "עוף גוזל",         "prompt": "a small fledgling bird standing at the edge of a nest, about to fly" },
+    { "id": "004", "title": "צל עץ תמר",        "prompt": "the long shadow of a single date palm tree cast across desert sand" },
+    { "id": "005", "title": "הפרח בגני",        "prompt": "one single delicate flower growing alone in a quiet garden" },
+    { "id": "006", "title": "עץ הרימון",        "prompt": "a pomegranate tree heavy with ripe red pomegranates" },
+    { "id": "007", "title": "שני שושנים",       "prompt": "two roses side by side, one deep red and one white" },
+    { "id": "008", "title": "ים של דמעות",      "prompt": "a vast grey stormy sea under heavy clouds" },
+    { "id": "009", "title": "ערב של שושנים",    "prompt": "a bouquet of roses at golden sunset" },
+    { "id": "010", "title": "ירושלים של זהב",   "prompt": "the old stone walls of Jerusalem glowing golden at sunset" },
+    { "id": "011", "title": "רכבת לילה לקהיר",  "prompt": "a lit passenger train crossing the desert at night under stars" },
+    { "id": "012", "title": "סע לאט",           "prompt": "an old car driving slowly down a long empty road" },
+    { "id": "013", "title": "קן ציפור",         "prompt": "a bird nest with small speckled eggs resting in a tree" },
+    { "id": "014", "title": "פרפר נחמד",        "prompt": "a colorful butterfly resting on a leaf, wings open" },
+    { "id": "015", "title": "יונתן הקטן",       "prompt": "a small boy climbing high up a tree, seen from below" },
+    { "id": "016", "title": "אליעזר והגזר",     "prompt": "a farmer pulling an enormous carrot out of the ground" },
+    { "id": "017", "title": "הכבש השישה עשר",   "prompt": "a flock of white sheep in a green field, one standing apart" },
+    { "id": "018", "title": "עוגה עוגה",        "prompt": "a round frosted birthday cake on a table" },
+    { "id": "019", "title": "דובון",            "prompt": "a soft worn teddy bear sitting alone on a bed" },
+    { "id": "020", "title": "שלכת",             "prompt": "orange and yellow autumn leaves falling from a tree" }
+  ]
+}

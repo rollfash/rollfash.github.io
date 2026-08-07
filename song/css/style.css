@@ -1,0 +1,304 @@
+/* ===== ערכת צבעים — זהה לעברדל כדי שהאתר ייראה אחיד ===== */
+:root {
+  --bg: #ffffff;
+  --fg: #1a1a1b;
+  --muted: #787c7e;
+  --border: #d3d6da;
+  --border-strong: #878a8c;
+  --tile-bg: #d3d6da;
+  --tile-fg: #1a1a1b;
+  --correct: #6aaa64;
+  --modal-bg: #ffffff;
+  --backdrop: rgba(255, 255, 255, .82);
+  --toast-bg: #1a1a1b;
+  --toast-fg: #ffffff;
+}
+
+html[data-theme="dark"] {
+  --bg: #121213;
+  --fg: #ffffff;
+  --muted: #818384;
+  --border: #3a3a3c;
+  --border-strong: #565758;
+  --tile-bg: #818384;
+  --tile-fg: #ffffff;
+  --correct: #538d4e;
+  --modal-bg: #1e1e20;
+  --backdrop: rgba(0, 0, 0, .7);
+  --toast-bg: #ffffff;
+  --toast-fg: #1a1a1b;
+}
+
+* { box-sizing: border-box; }
+
+html { height: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Segoe UI", "Arial Hebrew", Arial, "Noto Sans Hebrew", system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* ===== כותרת ===== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 12px;
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+.title { font-size: clamp(18px, 5.5vw, 26px); font-weight: 700; margin: 0; text-align: center; flex: 1; }
+.header-actions { display: flex; gap: 2px; }
+
+.icon-btn {
+  background: none;
+  border: 0;
+  color: var(--fg);
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+}
+.icon-btn:hover { background: color-mix(in srgb, var(--fg) 10%, transparent); }
+.icon-btn svg { width: 24px; height: 24px; fill: currentColor; display: block; }
+
+/* ===== אזור המשחק ===== */
+.game {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 12px 28px;
+  width: min(520px, 100%);
+  margin: 0 auto;
+}
+
+.photo-wrap {
+  width: min(320px, 72vw);
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--border);
+  flex: none;
+}
+#photo { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ===== משבצות התשובה ===== */
+.slots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  min-height: 46px;
+}
+.word { display: flex; gap: 4px; }
+
+.slot {
+  width: 38px;
+  height: 46px;
+  border: 0;
+  border-bottom: 3px solid var(--border-strong);
+  background: transparent;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 4px 4px 0 0;
+  transition: background-color .12s ease;
+}
+.slot.filled { background: color-mix(in srgb, var(--fg) 10%, transparent); }
+.slot.locked { border-bottom-color: var(--correct); color: var(--correct); cursor: default; }
+
+.slots.shake { animation: shake .55s; }
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+.slot.bounce { animation: bounce .6s; }
+@keyframes bounce {
+  0%, 20% { transform: translateY(0); }
+  40% { transform: translateY(-16px); }
+  60% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+/* ===== רמזים ===== */
+.hints { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.hint-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: .85rem;
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.hint-btn:hover:not(:disabled) { border-color: var(--border-strong); }
+.hint-btn:disabled { opacity: .4; cursor: default; }
+.hint-count { font-size: .8rem; color: var(--muted); }
+
+/* ===== מאגר האותיות ===== */
+.bank {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 420px;
+}
+.tile {
+  width: 46px;
+  height: 52px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--tile-bg);
+  color: var(--tile-fg);
+  font-family: inherit;
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .12s ease, transform .12s ease;
+}
+.tile:active:not(:disabled) { transform: scale(.94); }
+.tile.used { opacity: 0; pointer-events: none; }
+.tile.gone { opacity: .16; text-decoration: line-through; }
+
+/* ===== הודעות ===== */
+.toast-area {
+  position: fixed;
+  top: 68px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 50;
+}
+.toast {
+  background: var(--toast-bg);
+  color: var(--toast-fg);
+  padding: 12px 18px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: .95rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .25);
+}
+.toast.out { animation: fade-out .3s ease forwards; }
+@keyframes fade-out { to { opacity: 0; } }
+
+/* ===== חלונות ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--backdrop);
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  padding: 16px;
+  overflow-y: auto;
+}
+.modal-backdrop[hidden] { display: none; }
+
+.modal {
+  background: var(--modal-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 20px 18px;
+  width: min(460px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, .28);
+  user-select: text;
+}
+.modal[hidden] { display: none; }
+.modal h2 { margin: 0 0 12px; font-size: 1.3rem; }
+.modal h3 { margin: 20px 0 8px; font-size: 1rem; }
+.modal p { margin: 8px 0; line-height: 1.55; font-size: .95rem; }
+
+.close-btn {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  background: none;
+  border: 0;
+  color: var(--fg);
+  font-size: 1.9rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.footnote { color: var(--muted); font-size: .82rem; margin-top: 14px; }
+
+#result-banner { text-align: center; margin-bottom: 18px; }
+#result-banner h2 { font-size: 1.5rem; margin-bottom: 4px; }
+#result-song { font-size: 1.05rem; color: var(--muted); }
+#result-song b { color: var(--fg); font-size: 1.25rem; }
+#result-hints { color: var(--muted); font-size: .9rem; }
+
+.stats-grid { display: flex; justify-content: center; gap: 2px; }
+.stat { flex: 1; text-align: center; }
+.stat-num { font-size: 1.6rem; font-weight: 400; }
+.stat-label { font-size: .68rem; color: var(--muted); line-height: 1.2; }
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+  padding-top: 16px;
+}
+.countdown-box { flex: 1; text-align: center; }
+.countdown-label { font-size: .8rem; color: var(--muted); }
+.countdown { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.share-btn {
+  flex: 1;
+  background: var(--correct);
+  color: #fff;
+  border: 0;
+  border-radius: 4px;
+  padding: 14px;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.share-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+@media (max-height: 700px) {
+  .photo-wrap { width: min(240px, 58vw); }
+  .tile { width: 42px; height: 46px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slot.bounce, .slots.shake, .toast { animation: none !important; }
+}
