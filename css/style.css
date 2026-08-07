@@ -189,6 +189,10 @@ body {
   max-width: 520px;
   width: 100%;
   margin: 0 auto;
+
+  /* רוחב מקש אחיד בכל השורות. השורה הארוכה ביותר היא התחתונה:
+     8 אותיות + שני מקשים רחבים (1.5 כל אחד) = 11 יחידות, ו-9 מרווחים. */
+  --key-w: calc((100% - 45px) / 11);
 }
 
 /* המקלדת מסודרת כמו מקלדת עברית פיזית: ק בצד שמאל, פ בצד ימין.
@@ -202,7 +206,7 @@ body {
 }
 
 .key {
-  flex: 1;
+  flex: 0 0 var(--key-w);
   min-width: 0;
   height: 56px;
   border: 0;
@@ -218,11 +222,13 @@ body {
   transition: background-color .15s ease, color .15s ease;
 }
 .key:active { opacity: .75; }
-.key.wide { flex: 1.5; font-size: .82rem; gap: 4px; }
 
-/* ריווח בשורה העליונה, במקום שבו יושבות במקלדת אמיתית האותיות
-   הסופיות ן ו-ם. שומר על רוחב אחיד לכל המקשים בכל השורות. */
-.kb-spacer { min-width: 0; }
+/* מקש רחב = פי 1.5 מאות רגילה, ועוד המרווח שהוא "בולע" */
+.key.wide {
+  flex: 0 0 calc(var(--key-w) * 1.5 + 2.5px);
+  font-size: .82rem;
+  gap: 4px;
+}
 .key svg { width: 22px; height: 22px; fill: currentColor; }
 
 .key.correct { background: var(--correct); color: #fff; }
