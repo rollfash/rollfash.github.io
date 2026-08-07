@@ -3,6 +3,9 @@ node_modules/
 Thumbs.db
 *.log
 
+# הגדרות סביבת העבודה המקומית
+.claude/
+
 # ממשק הניהול נשאר מקומי בלבד ואינו מתפרסם לאתר.
 # הקבצים קיימים במחשב — פשוט אינם נכנסים ל-git.
 # להרצה:  node tools/serve.js  →  http://localhost:8080/admin.html
