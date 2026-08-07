@@ -1,0 +1,109 @@
+/* עיצוב דף הבית — רשימת המשחקים */
+
+:root {
+  --bg: #121213;
+  --fg: #ffffff;
+  --muted: #818384;
+  --border: #3a3a3c;
+  --card: #1e1e20;
+  --correct: #538d4e;
+  --present: #b59f3b;
+  --absent: #3a3a3c;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #ffffff;
+    --fg: #1a1a1b;
+    --muted: #787c7e;
+    --border: #d3d6da;
+    --card: #ffffff;
+    --correct: #6aaa64;
+    --present: #c9b458;
+    --absent: #787c7e;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Segoe UI", "Arial Hebrew", Arial, "Noto Sans Hebrew", system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px 40px;
+}
+
+.hub-header {
+  text-align: center;
+  padding: 48px 0 32px;
+}
+.hub-header h1 {
+  margin: 0 0 8px;
+  font-size: clamp(28px, 8vw, 44px);
+  letter-spacing: .01em;
+}
+.hub-header .sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.games {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  width: min(760px, 100%);
+  margin: 0 auto;
+  flex: 1;
+  align-content: start;
+}
+
+.game-card {
+  display: block;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px 22px 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform .15s ease, border-color .15s ease;
+}
+a.game-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--correct);
+}
+.game-card h2 { margin: 0 0 6px; font-size: 1.3rem; }
+.game-card p { margin: 0 0 16px; color: var(--muted); font-size: .92rem; line-height: 1.6; }
+
+.tiles { display: flex; gap: 5px; margin-bottom: 16px; }
+.t {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+.t.correct { background: var(--correct); border-color: var(--correct); color: #fff; }
+.t.present { background: var(--present); border-color: var(--present); color: #fff; }
+.t.img { border-style: dashed; font-size: 1.3rem; }
+
+.play { font-weight: 700; color: var(--correct); font-size: .95rem; }
+
+.game-card.soon { opacity: .55; }
+.game-card.soon .play { color: var(--muted); }
+
+.hub-footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: .82rem;
+  padding-top: 36px;
+}
+.hub-footer p { margin: 0; }

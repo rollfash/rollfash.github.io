@@ -82,7 +82,7 @@ function writeSchedule(schedule) {
     ? entries.map(([date, word]) => `  '${date}': '${word}',`).join('\n') + '\n'
     : '';
 
-  fs.writeFileSync(path.join(ROOT, 'js', 'schedule.js'),
+  fs.writeFileSync(path.join(ROOT, 'wordle', 'js', 'schedule.js'),
 `/* -------------------------------------------------------------------------
  * schedule.js — מילים מתוזמנות לתאריכים מסוימים
  *
@@ -148,8 +148,13 @@ http.createServer(async (req, res) => {
 
   if (url.startsWith('/api/')) { json(res, 404, { ok: false, error: 'אין נתיב כזה' }); return; }
 
-  const filePath = path.join(ROOT, url === '/' ? 'index.html' : url);
+  let filePath = path.join(ROOT, url);
   if (!filePath.startsWith(ROOT)) { res.writeHead(403).end('Forbidden'); return; }
+
+  // תיקייה → index.html שבתוכה, בדיוק כמו ש-GitHub Pages מתנהג
+  try {
+    if (fs.statSync(filePath).isDirectory()) filePath = path.join(filePath, 'index.html');
+  } catch { /* לא קיים — ייפול ל-404 בהמשך */ }
 
   fs.readFile(filePath, (err, data) => {
     if (err) {
@@ -162,6 +167,7 @@ http.createServer(async (req, res) => {
     }).end(data);
   });
 }).listen(PORT, () => {
-  console.log(`המשחק:        http://localhost:${PORT}`);
-  console.log(`ממשק הניהול:  http://localhost:${PORT}/admin.html`);
+  console.log(`דף הבית:      http://localhost:${PORT}`);
+  console.log(`עברדל:        http://localhost:${PORT}/wordle/`);
+  console.log(`ממשק הניהול:  http://localhost:${PORT}/wordle/admin.html`);
 });

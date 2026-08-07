@@ -143,7 +143,7 @@ ${packed(allowedOnly)};
 window.WORD_DATA = { ANSWERS, ALLOWED_PACKED };
 `;
 
-fs.writeFileSync(path.join(ROOT, 'js', 'words.js'), output, 'utf8');
+fs.writeFileSync(path.join(ROOT, 'wordle', 'js', 'words.js'), output, 'utf8');
 
 /* ----- דוח ----- */
 console.log('מקורות:\n');

@@ -10,5 +10,5 @@ Thumbs.db
 # הקבצים קיימים במחשב — פשוט אינם נכנסים ל-git.
 # להרצה:  node tools/serve.js  →  http://localhost:8080/admin.html
 admin.html
-js/admin.js
-css/admin.css
+**/admin.js
+**/admin.css

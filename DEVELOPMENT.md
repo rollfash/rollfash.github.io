@@ -132,25 +132,40 @@ git push -u origin main
 
 ## מבנה הקבצים
 
+המאגר הוא אתר רב-משחקים. שורש המאגר הוא שורש האתר, וכל משחק
+יושב בתיקייה משלו.
+
 ```
-index.html            המשחק
-README.md             תיאור קצר — מה שמוצג בדף המאגר ב-GitHub
-DEVELOPMENT.md        המסמך הזה
-css/style.css         עיצוב המשחק, מצב כהה ובהיר
-js/config.js          שם המשחק ותאריך ההתחלה
-js/words.js           המילון — נוצר אוטומטית, לא לערוך ידנית
-js/schedule.js        מילים שנקבעו לתאריכים מסוימים
-js/daily.js           בחירת מילת היום (משותף למשחק ולניהול)
-js/game.js            לוגיקת המשחק
-tools/build-words.js  בניית המילון מקבצי data/
-tools/serve.js        שרת פיתוח מקומי + נקודות קצה לשמירה
-data/                 קבצי המקור של המילים
+index.html               דף הבית — רשימת המשחקים
+css/hub.css              עיצוב דף הבית
+robots.txt · sitemap.xml למנועי חיפוש
+favicon.png
+
+wordle/                  עברדל — rollfash.github.io/wordle/
+  index.html             המשחק
+  css/style.css          עיצוב, מצב כהה ובהיר
+  js/config.js           שם המשחק ותאריך ההתחלה
+  js/words.js            המילון — נוצר אוטומטית, לא לערוך ידנית
+  js/schedule.js         מילים שנקבעו לתאריכים מסוימים
+  js/daily.js            בחירת מילת היום (משותף למשחק ולניהול)
+  js/game.js             לוגיקת המשחק
+  og-image.png           תמונת שיתוף
+
+data/                    קבצי המקור של המילים
+tools/build-words.js     בניית המילון מקבצי data/
+tools/serve.js           שרת פיתוח מקומי + נקודות קצה לשמירה
+README.md                תיאור קצר — מה שמוצג בדף המאגר ב-GitHub
+DEVELOPMENT.md           המסמך הזה
 
 לא נכללים ב-git (מקומי בלבד):
-admin.html            ממשק הניהול
-js/admin.js           לוגיקת ממשק הניהול
-css/admin.css         עיצוב ממשק הניהול
+wordle/admin.html        ממשק הניהול
+wordle/js/admin.js       לוגיקת ממשק הניהול
+wordle/css/admin.css     עיצוב ממשק הניהול
 ```
+
+> שם המאגר הוא `rollfash.github.io`, ולכן GitHub Pages מגיש אותו מהשורש.
+> קבצי המשחק יושבים ב-`wordle/` כדי שהכתובת `rollfash.github.io/wordle/`
+> תישאר בדיוק כפי שהייתה — קישורים שכבר שותפו ממשיכים לעבוד.
 
 ## מה נשמר במחשב של השחקן
 
