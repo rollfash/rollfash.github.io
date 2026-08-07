@@ -3,6 +3,10 @@ node_modules/
 Thumbs.db
 *.log
 
+# מפתחות API — לעולם לא נכנסים ל-git. המאגר ציבורי.
+.env
+*.token
+
 # הגדרות סביבת העבודה המקומית
 .claude/
 
@@ -12,3 +16,6 @@ Thumbs.db
 admin.html
 **/admin.js
 **/admin.css
+
+# עמוד סקירת התמונות — חושף את כל התשובות, ולכן מקומי בלבד
+review.html

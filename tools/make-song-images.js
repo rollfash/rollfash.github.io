@@ -3,17 +3,24 @@
  *
  * הרצה:            node tools/make-song-images.js
  * ייצור מחדש:      node tools/make-song-images.js --force 003 007
+ * הכול מחדש:       node tools/make-song-images.js --force
  *
- * קורא את data/songs.json, מייצר דרך Pollinations כל תמונה שחסרה,
- * ובונה מחדש את song/js/songs.js.
+ * קורא את data/songs.json, מייצר כל תמונה שחסרה, ובונה מחדש את
+ * song/js/songs.js.
  *
- * למה מראש ולא בזמן אמת:
- *   1. כל השחקנים חייבים לראות בדיוק את אותה תמונה, אחרת אין מה לשתף.
- *   2. הייצור לוקח עד 45 שניות — בלתי נסבל בזמן משחק.
- *   3. תמונה מקומית נטענת מיידית ועובדת גם כשהשירות למטה.
+ * ----- שני מנועים -----
  *
- * Pollinations אינו דורש מפתח. הפרמטר seed מבטיח שאותו פרומפט
- * יחזיר תמיד את אותה תמונה.
+ * FLUX.1-schnell (ברירת מחדל) — דורש מפתח HF_TOKEN בקובץ .env.
+ *   איכות גבוהה בהרבה, ובעיקר: מבין יחסים בין אלמנטים ("חצי ילד חצי זקן",
+ *   "ידיים מכופפות בננה"). מחזיר JPEG במשקל ~50KB.
+ *
+ * Pollinations (גיבוי) — בלי מפתח כלל, אבל המודל היחיד הזמין הוא sana:
+ *   מצייר יפה עצם בודד, ומפספס כמעט כל סצנה שדורשת פעולה או ניגוד.
+ *
+ * ----- איך כותבים פרומפט שעובד -----
+ *   • לתאר את התמונה, לא את הרעיון המופשט.
+ *   • לא לכתוב שלילות ("no text") — מודלי דיפוזיה לא מבינים שלילה.
+ *   • לא לכתוב "single subject" — זה מוחק את האלמנט השני בסצנה.
  * ======================================================================= */
 
 const fs = require('fs');
@@ -25,28 +32,33 @@ const IMG_DIR = path.join(ROOT, 'song', 'images');
 const OUT_JS = path.join(ROOT, 'song', 'js', 'songs.js');
 
 const SIZE = 768;
-const TIMEOUT_MS = 120000;
+const TIMEOUT_MS = 180000;
+const STYLE = 'highly detailed';
 
-/* סגנון אחיד לכל החידות. השלילות חשובות: טקסט בתמונה מסגיר את
- * התשובה, והמודלים ממילא מייצרים עברית משובשת. */
-const STYLE = 'clean minimal composition, single clear subject, soft natural lighting, '
-            + 'plain uncluttered background, highly detailed, photographic';
-const NEGATIVE = 'no text, no letters, no words, no writing, no watermark, no signature, no people talking';
+/* ----- טעינת .env (מוחרג מ-git; המאגר ציבורי) ----- */
+function loadEnv() {
+  const file = path.join(ROOT, '.env');
+  if (!fs.existsSync(file)) return {};
+  const env = {};
+  for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+    const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/);
+    if (m && !line.trim().startsWith('#')) env[m[1]] = m[2];
+  }
+  return env;
+}
 
-const args = process.argv.slice(2);
-const force = args.includes('--force');
-const only = args.filter((a) => !a.startsWith('--'));
+const HF_TOKEN = loadEnv().HF_TOKEN || process.env.HF_TOKEN || '';
+const ENGINE = HF_TOKEN ? 'flux' : 'pollinations';
 
+/* ----- ולידציה ----- */
 const { songs } = JSON.parse(fs.readFileSync(SRC, 'utf8'));
 
-/* ----- ולידציה: תשובה חייבת להיות אותיות עבריות ורווחים בלבד ----- */
 const invalid = songs.filter((s) => !/^[א-ת]+(?: [א-ת]+)*$/.test(s.title));
 if (invalid.length) {
   console.error('כותרות לא תקינות (מותר רק אותיות עבריות ורווחים):');
   invalid.forEach((s) => console.error(`  ${s.id}: "${s.title}"`));
   process.exit(1);
 }
-
 const dupIds = songs.map((s) => s.id).filter((id, i, a) => a.indexOf(id) !== i);
 if (dupIds.length) {
   console.error(`מזהים כפולים: ${[...new Set(dupIds)].join(', ')}`);
@@ -56,31 +68,95 @@ if (dupIds.length) {
 fs.mkdirSync(IMG_DIR, { recursive: true });
 fs.mkdirSync(path.dirname(OUT_JS), { recursive: true });
 
-function imageUrl(prompt, seed) {
-  const full = `${prompt}, ${STYLE}, ${NEGATIVE}`;
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(full)}`
-       + `?width=${SIZE}&height=${SIZE}&nologo=true&seed=${seed}`;
-}
+const args = process.argv.slice(2);
+const force = args.includes('--force');
+const only = args.filter((a) => !a.startsWith('--'));
 
-/** seed יציב הנגזר מהמזהה, כדי שייצור חוזר יחזיר את אותה תמונה. */
+/** seed יציב לפי המזהה, כדי שייצור חוזר ייתן את אותה תמונה */
 const seedFor = (id) => [...id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 100000;
 
-async function fetchImage(url) {
+const withTimeout = async (fn) => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
+  try { return await fn(controller.signal); } finally { clearTimeout(timer); }
+};
+
+/* ----- מנוע FLUX דרך Hugging Face ----- */
+async function generateFlux(prompt, seed) {
+  return withTimeout(async (signal) => {
+    const res = await fetch('https://router.huggingface.co/together/v1/images/generations', {
+      method: 'POST',
+      signal,
+      headers: {
+        'Authorization': `Bearer ${HF_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'black-forest-labs/FLUX.1-schnell',
+        prompt: `${prompt}, ${STYLE}`,
+        width: SIZE,
+        height: SIZE,
+        seed,
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      const hint = res.status === 402 ? ' — נגמר הקרדיט החינמי בחשבון'
+                 : res.status === 429 ? ' — חריגה ממגבלת הקצב, המתינו מעט'
+                 : '';
+      throw new Error(`HTTP ${res.status}${hint} ${body.slice(0, 160)}`);
+    }
+
+    const json = await res.json();
+    const url = json?.data?.[0]?.url;
+    const b64 = json?.data?.[0]?.b64_json;
+    if (b64) return Buffer.from(b64, 'base64');
+    if (!url) throw new Error(`תשובה לא צפויה: ${JSON.stringify(json).slice(0, 160)}`);
+
+    const img = await fetch(url, { signal });
+    if (!img.ok) throw new Error(`הורדת התמונה נכשלה: HTTP ${img.status}`);
+    return Buffer.from(await img.arrayBuffer());
+  });
+}
+
+/* ----- מנוע גיבוי ----- */
+async function generatePollinations(prompt, seed) {
+  return withTimeout(async (signal) => {
+    const full = encodeURIComponent(`${prompt}, ${STYLE}`);
+    const url = `https://image.pollinations.ai/prompt/${full}`
+              + `?width=${SIZE}&height=${SIZE}&nologo=true&seed=${seed}`;
+    const res = await fetch(url, { signal });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length < 5000) throw new Error(`תשובה קטנה מדי (${buf.length} bytes) — כנראה שגיאה`);
-    return buf;
-  } finally {
-    clearTimeout(timer);
+    return Buffer.from(await res.arrayBuffer());
+  });
+}
+
+const generateOnce = ENGINE === 'flux' ? generateFlux : generatePollinations;
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** מגבלת הקצב של הספק דינמית. במקום להיכשל — ממתינים ומנסים שוב. */
+async function generate(prompt, seed) {
+  const waits = [5000, 15000, 30000, 60000];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await generateOnce(prompt, seed);
+    } catch (err) {
+      const throttled = /429|Too many requests|rate limit/i.test(err.message);
+      if (!throttled || attempt >= waits.length) throw err;
+      process.stdout.write(`⏳${waits[attempt] / 1000}s `);
+      await sleep(waits[attempt]);
+    }
   }
 }
 
+/* ----- הרצה ----- */
 (async () => {
+  console.log(`מנוע: ${ENGINE === 'flux' ? 'FLUX.1-schnell (Hugging Face)' : 'Pollinations / sana — ללא מפתח'}\n`);
+
   let made = 0, skipped = 0, failed = 0;
+  const failures = [];
 
   for (const song of songs) {
     if (only.length && !only.includes(song.id)) continue;
@@ -90,21 +166,22 @@ async function fetchImage(url) {
 
     process.stdout.write(`  ${song.id} ${song.title} … `);
     try {
-      const buf = await fetchImage(imageUrl(song.prompt, seedFor(song.id)));
+      const buf = await generate(song.prompt, seedFor(song.id));
+      if (buf.length < 5000) throw new Error(`קובץ קטן מדי (${buf.length} bytes)`);
       fs.writeFileSync(file, buf);
       console.log(`✓ ${Math.round(buf.length / 1024)}KB`);
       made++;
+      await sleep(1500);   // נשימה בין בקשות, כדי לא להיתקל במגבלת הקצב מלכתחילה
     } catch (err) {
       console.log(`✗ ${err.message}`);
+      failures.push(song.id);
       failed++;
     }
   }
 
   /* ----- בניית קובץ הנתונים למשחק ----- */
   const ready = songs.filter((s) => fs.existsSync(path.join(IMG_DIR, `${s.id}.jpg`)));
-  const rows = ready
-    .map((s) => `  { id: '${s.id}', title: '${s.title}' },`)
-    .join('\n');
+  const rows = ready.map((s) => `  { id: '${s.id}', title: '${s.title}' },`).join('\n');
 
   fs.writeFileSync(OUT_JS,
 `/* -------------------------------------------------------------------------
@@ -119,8 +196,11 @@ ${rows}
 ];
 `, 'utf8');
 
+  const totalKB = ready.reduce((n, s) => n + fs.statSync(path.join(IMG_DIR, `${s.id}.jpg`)).size, 0) / 1024;
+
   console.log(`\nנוצרו: ${made} · דילוגים: ${skipped} · כשלונות: ${failed}`);
-  console.log(`חידות מוכנות: ${ready.length} מתוך ${songs.length}`);
-  console.log(`מספיק ל-${ready.length} ימי משחק.`);
-  if (failed) console.log('\nלייצור חוזר של מה שנכשל:  node tools/make-song-images.js --force <id>');
+  console.log(`חידות מוכנות: ${ready.length} מתוך ${songs.length} · ${Math.round(totalKB / 1024 * 10) / 10}MB`);
+  if (failures.length) {
+    console.log(`\nלניסיון חוזר:  node tools/make-song-images.js --force ${failures.join(' ')}`);
+  }
 })();
