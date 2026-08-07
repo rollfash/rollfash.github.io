@@ -25,7 +25,9 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const WORDS = path.join(ROOT, 'data', process.env.BANK ? 'crossword-words-bank.json' : 'crossword-words.json');
+/* הבריכה המסוננת — רק ערכים שאפשר לכתוב להם הגדרה.
+ * נוצרת על ידי tools/curate-answers.js */
+const WORDS = path.join(ROOT, 'data', 'crossword-answers.json');
 
 /* '.' = תא פתוח, '#' = תא שחור
  *
