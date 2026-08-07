@@ -80,12 +80,21 @@ const PATTERNS = {
     '.....',
     '....#',
   ],
+  /* ברוחב 5 תא שחור באמצע שורה משאיר רצף של 2, ולכן חסימות מותרות
+   * רק בקצוות. ברוחב 7 אפשר גם באמצע (3+3). */
   'mini-b': [
-    '..#..',
+    '#....',
     '.....',
     '.....',
     '.....',
-    '..#..',
+    '#....',
+  ],
+  'mini-c': [
+    '....#',
+    '.....',
+    '.....',
+    '.....',
+    '#....',
   ],
 };
 
@@ -119,6 +128,31 @@ if (!grid) {
 
 const seed = Number(argVal('seed', 1));
 const { words: DICT } = JSON.parse(fs.readFileSync(WORDS, 'utf8'));
+
+/* ----- בריכת ה"טעם" -----
+ * דירוג לפי שכיחות בוחר מילים מנהלתיות — בדיקה, שיקוף, טקסים.
+ * הן נפוצות ולכן שורדות כל סינון, והן משעממות. הרשימה הידנית
+ * מקבלת עדיפות מוחלטת במילוי, והמילון הרגיל משמש רק כשאין ברירה. */
+const FINAL_MAP = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
+const normalise = (w) => [...w].map((c) => FINAL_MAP[c] || c).join('');
+
+const flavor = new Set();
+const FLAVOR_FILE = path.join(ROOT, 'data', 'flavor-words.txt');
+if (fs.existsSync(FLAVOR_FILE)) {
+  for (const line of fs.readFileSync(FLAVOR_FILE, 'utf8').split('\n')) {
+    const w = line.trim();
+    if (/^[א-ת]+$/.test(w)) flavor.add(normalise(w));
+  }
+}
+
+/* מילים מהרשימה הידנית נכנסות למילון גם אם לא שרדו את הסינון
+ * הסטטיסטי — "יריחו" ו"סחוג" נדירים בקורפוס אך מצוינים בתשבץ. */
+for (const w of flavor) {
+  const len = [...w].length;
+  if (len < 3 || len > 7) continue;
+  DICT[len] = DICT[len] || [];
+  if (!DICT[len].includes(w)) DICT[len].push(w);
+}
 
 /* ----- אקראיות עם זרע, כדי שאותו seed ייתן תמיד את אותו מילוי ----- */
 function mulberry32(a) {
@@ -244,12 +278,15 @@ function solve(remaining) {
 
   const rest = remaining.filter((s) => s !== best);
 
-  /* המילון ממוין לפי שכיחות, ולכן ערבוב של כל המועמדים היה מציף את
-   * הרשת במילים נדירות. במקום זה לוקחים את הנפוצות ביותר ומערבבים
-   * רק אותן — כך יש גיוון בין הרצות, אבל התוצאה נשארת מילים מוכרות. */
-  const pool = shuffled(bestList.slice(0, 300));
+  /* סדר הניסיון: קודם מילים מרשימת ה"טעם", ורק אחריהן המילון הרגיל.
+   * בתוך כל קבוצה מערבבים, כדי שרשתות שונות ייצאו מ-seed שונה.
+   * המילון מוגבל ל-300 הנפוצות ביותר — הוא ממוין לפי שכיחות, וערבוב
+   * של הכול היה מציף את הרשת במילים שאיש לא מכיר. */
+  const tasty = shuffled(bestList.filter((w) => flavor.has(w)));
+  const plain = shuffled(bestList.filter((w) => !flavor.has(w)).slice(0, 300));
+  const pool = [...tasty, ...plain];
 
-  for (const word of pool.slice(0, 60)) {
+  for (const word of pool.slice(0, 80)) {
     const touched = [];
     let ok = true;
     for (let i = 0; i < best.cells.length; i++) {
